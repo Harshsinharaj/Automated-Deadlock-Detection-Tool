@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Deadlock Detection Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+        input, button { margin: 5px; }
+        table { margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h2>AI-Based Deadlock Detection Tool</h2>
+    <button onclick="detectDeadlock()">Check for Deadlock</button>
+    <p id="result"></p>
+    
+    <script>
+        class DeadlockDetector {
+            constructor(processes, resources, allocation, request) {
+                this.processes = processes;
+                this.resources = resources;
+                this.allocation = allocation;
+                this.request = request;
+                this.work = [...resources];
+                this.finish = new Array(processes.length).fill(false);
+            }
+
+            isSafe() {
+                let safeSequence = [];
+                while (true) {
+                    let found = false;
+                    for (let i = 0; i < this.processes.length; i++) {
+                        if (!this.finish[i] && this.request[i].every((r, j) => r <= this.work[j])) {
+                            safeSequence.push(this.processes[i]);
+                            this.work = this.work.map((w, j) => w + this.allocation[i][j]);
+                            this.finish[i] = true;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) break;
+                }
+                return [this.finish.every(f => f), safeSequence];
+            }
+        }
+
+        function detectDeadlock() {
+            let processes = ['P1', 'P2', 'P3'];
+            let resources = [3, 3, 2];
+            let allocation = [
+                [0, 1, 0],
+                [2, 0, 0],
+                [3, 0, 2]
+            ];
+            let request = [
+                [0, 0, 0],
+                [2, 0, 2],
+                [0, 0, 2]
+            ];
+            
+            let detector = new DeadlockDetector(processes, resources, allocation, request);
+            let [safe, sequence] = detector.isSafe();
+            
+            document.getElementById("result").innerText = safe ? `No Deadlock. Safe Sequence: ${sequence.join(' -> ')}` : "Deadlock detected!";
+        }
+    </script>
+</body>
+</html>
